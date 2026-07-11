@@ -1,0 +1,15 @@
+{
+  "name": "akane-codex",
+  "version": "1.0.0",
+  "description": "AKANE CODEX - générateur de code multi-langage, PWA installable",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
