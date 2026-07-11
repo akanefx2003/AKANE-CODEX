@@ -1,6 +1,5 @@
-// AKANE CODEX — serveur unique
-// Sert l'application (PWA installable) ET protège la clé API Anthropic.
-// Un seul déploiement Railway suffit pour tout.
+// AKANE CODEX — serveur (version Groq, gratuite)
+// Sert l'application ET protège la clé API Groq.
 
 const express = require("express");
 const path = require("path");
@@ -9,11 +8,11 @@ const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "www")));
 
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const PORT = process.env.PORT || 3000;
 
-if (!ANTHROPIC_API_KEY) {
-  console.warn("⚠️  ANTHROPIC_API_KEY manquante. Ajoute-la dans les Variables Railway.");
+if (!GROQ_API_KEY) {
+  console.warn("⚠️  GROQ_API_KEY manquante. Ajoute-la dans les Variables Railway.");
 }
 
 app.post("/api/generate", async (req, res) => {
@@ -29,16 +28,15 @@ app.post("/api/generate", async (req, res) => {
       : `Le langage demandé est : ${language}.`;
 
   try {
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
+        Authorization: `Bearer ${GROQ_API_KEY}`,
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-6",
-        max_tokens: 4000,
+        model: "llama-3.3-70b-versatile",
+        temperature: 0.3,
         messages: [
           {
             role: "user",
@@ -58,10 +56,10 @@ Le champ "code" doit contenir des retours à la ligne échappés en \\n comme da
     const data = await response.json();
 
     if (!response.ok) {
-      return res.status(response.status).json({ error: data?.error?.message || "Erreur API Anthropic" });
+      return res.status(response.status).json({ error: data?.error?.message || "Erreur API Groq" });
     }
 
-    const raw = data?.content?.find((b) => b.type === "text")?.text || "";
+    const raw = data?.choices?.[0]?.message?.content || "";
     const clean = raw.replace(/```json|```/g, "").trim();
     const parsed = JSON.parse(clean);
 
@@ -72,4 +70,4 @@ Le champ "code" doit contenir des retours à la ligne échappés en \\n comme da
   }
 });
 
-app.listen(PORT, () => console.log(`AKANE CODEX en écoute sur le port ${PORT}`));
+app.listen(PORT, () => console.log(`AKANE CODEX (Groq) en écoute sur le port ${PORT}`));
